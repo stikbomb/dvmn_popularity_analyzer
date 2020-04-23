@@ -2,9 +2,9 @@ import os
 from datetime import datetime, timedelta
 
 from pprint import pprint
-
 import requests
 import dotenv
+import plotly.graph_objects as go
 
 
 class APIError(Exception):
@@ -31,7 +31,6 @@ def get_timestamps(number_of_days):
         result.append((datetime.date(day), day_timestamp, previous_day_timestamp))
 
         day = previous_day
-    pprint(result)
     return result
 
 
@@ -67,6 +66,26 @@ def get_period_statistic(vk_data, query, start_timestamp, end_timestamp):
     return decoded_response['response']['total_count']
 
 
+def get_statistick_by_periods(vk_data, query, periods):
+    result = []
+    for period in periods:
+        day_date, end_timestamp, start_timestamp = period
+        day_result = get_period_statistic(vk_data, query, start_timestamp, end_timestamp)
+        result.append((day_date, day_result))
+    return result
+
+
+def get_chart(stats_by_periods):
+    dates = []
+    counts = []
+    for item in stats_by_periods:
+        dates.append(item[0])
+        counts.append(item[1])
+
+    fig = go.Figure([go.Bar(x=dates, y=counts)])
+    fig.show()
+
+
 if __name__ == '__main__':
 
     dotenv.load_dotenv()
@@ -79,4 +98,6 @@ if __name__ == '__main__':
     start = 1587416400.0
     end = 1587502800.0
 
-    get_period_statistic(vk_data, query, start, end)
+    timestamps = get_timestamps(10)
+    # pprint(get_statistick_by_periods(vk_data, query, timestamps))
+    get_chart(get_statistick_by_periods(vk_data, query, timestamps))
