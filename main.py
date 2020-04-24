@@ -96,8 +96,9 @@ if __name__ == '__main__':
     vk_data = [vk_access_token, vk_api_version]
 
     query = 'Coca-cola'
+    number_of_days = 7
 
-    timestamps = get_timestamps(7)
+    timestamps = get_timestamps(number_of_days)
 
     stats_by_period = get_stats_by_period(vk_data, query, timestamps)
 
