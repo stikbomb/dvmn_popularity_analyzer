@@ -1,7 +1,6 @@
 import os
 from datetime import datetime, timedelta
 
-from pprint import pprint
 import requests
 import dotenv
 import plotly.graph_objects as go
@@ -11,18 +10,17 @@ class APIError(Exception):
     pass
 
 
-class FileError(Exception):
-    pass
-
-
 def get_timestamps(number_of_days):
     current_time = datetime.today()
 
-    day = datetime(current_time.year, current_time.month, current_time.day, 0, 0)
+    hours = 0
+    minutes = 0
+
+    day = datetime(current_time.year, current_time.month, current_time.day, hours, minutes)
 
     result = []
 
-    for number in range(number_of_days):
+    for _ in range(number_of_days):
 
         day_timestamp = datetime.timestamp(day)
         previous_day = day - timedelta(hours=24)
@@ -31,6 +29,7 @@ def get_timestamps(number_of_days):
         result.append((datetime.date(day), day_timestamp, previous_day_timestamp))
 
         day = previous_day
+
     return result
 
 
@@ -44,7 +43,7 @@ def check_error_in_response(decoded_response):
         pass
 
 
-def get_period_statistic(vk_data, query, start_timestamp, end_timestamp):
+def get_number_of_references_by_interval(vk_data, query, start_timestamp, end_timestamp):
     url = 'https://api.vk.com/method/newsfeed.search'
 
     token, api_version = vk_data
@@ -63,22 +62,24 @@ def get_period_statistic(vk_data, query, start_timestamp, end_timestamp):
     decoded_response = response.json()
     check_error_in_response(decoded_response)
 
-    return decoded_response['response']['total_count']
+    number_of_references = decoded_response['response']['total_count']
+
+    return number_of_references
 
 
-def get_statistick_by_periods(vk_data, query, periods):
+def get_stats_by_period(vk_data, query, period):
     result = []
-    for period in periods:
-        day_date, end_timestamp, start_timestamp = period
-        day_result = get_period_statistic(vk_data, query, start_timestamp, end_timestamp)
+    for interval in period:
+        day_date, end_timestamp, start_timestamp = interval
+        day_result = get_number_of_references_by_interval(vk_data, query, start_timestamp, end_timestamp)
         result.append((day_date, day_result))
     return result
 
 
-def get_chart(stats_by_periods):
+def get_chart(stats_by_period):
     dates = []
     counts = []
-    for item in stats_by_periods:
+    for item in stats_by_period:
         dates.append(item[0])
         counts.append(item[1])
 
@@ -95,9 +96,9 @@ if __name__ == '__main__':
     vk_data = [vk_access_token, vk_api_version]
 
     query = 'Coca-cola'
-    start = 1587416400.0
-    end = 1587502800.0
 
-    timestamps = get_timestamps(10)
-    # pprint(get_statistick_by_periods(vk_data, query, timestamps))
-    get_chart(get_statistick_by_periods(vk_data, query, timestamps))
+    timestamps = get_timestamps(7)
+
+    stats_by_period = get_stats_by_period(vk_data, query, timestamps)
+
+    get_chart(stats_by_period)
