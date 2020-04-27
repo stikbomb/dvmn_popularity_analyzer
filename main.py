@@ -10,25 +10,42 @@ class APIError(Exception):
     pass
 
 
-def get_timestamps(number_of_days):
+class IntervalError(Exception):
+    pass
+
+
+def get_hours_of_interval(interval_type):
+    if interval_type == 'day':
+        return 24
+    elif interval_type == 'week':
+        return 168
+    elif interval_type == 'month':
+        return 5040
+    else:
+        raise IndexError(f'Interval type "{interval_type}" doesn\'t exist')
+
+
+def get_timestamps(number_of_intervals, interval_type):
     current_time = datetime.today()
 
     hours = 0
     minutes = 0
 
-    day = datetime(current_time.year, current_time.month, current_time.day, hours, minutes)
+    interval = datetime(current_time.year, current_time.month, current_time.day, hours, minutes)
 
     result = []
 
-    for _ in range(number_of_days):
+    hours = get_hours_of_interval(interval_type)
 
-        day_timestamp = datetime.timestamp(day)
-        previous_day = day - timedelta(hours=24)
-        previous_day_timestamp = datetime.timestamp(previous_day)
+    for _ in range(number_of_intervals):
 
-        result.append((datetime.date(day), day_timestamp, previous_day_timestamp))
+        interval_timestamp = datetime.timestamp(interval)
+        previous_interval = interval - timedelta(hours=hours)
+        previous_interval_timestamp = datetime.timestamp(previous_interval)
 
-        day = previous_day
+        result.append((datetime.date(interval), interval_timestamp, previous_interval_timestamp))
+
+        interval = previous_interval
 
     return result
 
@@ -96,9 +113,10 @@ if __name__ == '__main__':
     vk_data = [vk_access_token, vk_api_version]
 
     query = 'Coca-cola'
-    number_of_days = 7
+    number_of_intervals = 7
+    interval_type = 'week'
 
-    timestamps = get_timestamps(number_of_days)
+    timestamps = get_timestamps(number_of_intervals, interval_type)
 
     stats_by_period = get_stats_by_period(vk_data, query, timestamps)
 
