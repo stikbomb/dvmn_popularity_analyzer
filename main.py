@@ -20,7 +20,7 @@ def get_hours_of_interval(interval_type):
     elif interval_type == 'week':
         return 168
     elif interval_type == 'month':
-        return 5040
+        return 720
     else:
         raise IndexError(f'Interval type "{interval_type}" doesn\'t exist')
 
@@ -107,17 +107,26 @@ def get_chart(stats_by_period):
 if __name__ == '__main__':
 
     dotenv.load_dotenv()
+
+    from args_parser import parse_args
+    args = parse_args()
+    print(args.queries)
+    print(args)
+    print(args.i)
+    print(args.n)
+
     vk_access_token = os.getenv('VK_ACCESS_TOKEN')
     vk_api_version = os.getenv('VK_API_VERSION')
 
     vk_data = [vk_access_token, vk_api_version]
 
     query = 'Coca-cola'
-    number_of_intervals = 7
-    interval_type = 'week'
+    number_of_intervals = args.n
+    interval_type = args.i
 
     timestamps = get_timestamps(number_of_intervals, interval_type)
-
+    print(timestamps)
     stats_by_period = get_stats_by_period(vk_data, query, timestamps)
-
+    print(stats_by_period)
     get_chart(stats_by_period)
+
