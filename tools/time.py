@@ -21,7 +21,7 @@ def get_interval_dates(number_of_intervals, interval_type):
     interval_date = datetime.today().date()
     days = get_days_of_interval(interval_type)
     interval_dates = [(interval_date - timedelta(days=days) * i) for i in range(number_of_intervals)]
-    return interval_dates
+    return {'dates': interval_dates}
 
 
 def get_today_datetime():

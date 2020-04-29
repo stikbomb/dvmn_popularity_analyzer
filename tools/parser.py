@@ -6,8 +6,9 @@ def parse_args():
 
     parser.add_argument('queries',
                         type=str,
-                        nargs='+',
-                        help='queries')
+                        nargs='?',
+                        help='queries',
+                        default=['Шаурма', 'Шаверма', 'Купат'])
     parser.add_argument(
         '-interval',
         '-i',

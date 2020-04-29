@@ -2,10 +2,10 @@ import os
 
 import dotenv
 
-from args_parser import parse_args
-from time_tools import get_interval_dates, get_timestamps
-from stats import get_stats_for_queries
-from plot_tools import get_group_chart
+from tools.parser import parse_args
+from tools.time import get_interval_dates, get_timestamps
+from tools.stats import get_dataframe
+from tools.plot import get_chart
 
 
 if __name__ == '__main__':
@@ -25,6 +25,7 @@ if __name__ == '__main__':
 
     dates = get_interval_dates(number, interval_type)
     period = get_timestamps(number, interval_type)
-    queries_stats = get_stats_for_queries(vk_data, queries, period)
 
-    get_group_chart(dates, queries_stats)
+    df = get_dataframe(vk_data, queries, dates, period)
+
+    get_chart(df)
