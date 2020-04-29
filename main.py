@@ -1,132 +1,30 @@
 import os
-from datetime import datetime, timedelta
 
-import requests
 import dotenv
-import plotly.graph_objects as go
 
-
-class APIError(Exception):
-    pass
-
-
-class IntervalError(Exception):
-    pass
-
-
-def get_hours_of_interval(interval_type):
-    if interval_type == 'day':
-        return 24
-    elif interval_type == 'week':
-        return 168
-    elif interval_type == 'month':
-        return 720
-    else:
-        raise IndexError(f'Interval type "{interval_type}" doesn\'t exist')
-
-
-def get_timestamps(number_of_intervals, interval_type):
-    current_time = datetime.today()
-
-    hours = 0
-    minutes = 0
-
-    interval = datetime(current_time.year, current_time.month, current_time.day, hours, minutes)
-
-    result = []
-
-    hours = get_hours_of_interval(interval_type)
-
-    for _ in range(number_of_intervals):
-
-        interval_timestamp = datetime.timestamp(interval)
-        previous_interval = interval - timedelta(hours=hours)
-        previous_interval_timestamp = datetime.timestamp(previous_interval)
-
-        result.append((datetime.date(interval), interval_timestamp, previous_interval_timestamp))
-
-        interval = previous_interval
-
-    return result
-
-
-def check_error_in_response(decoded_response):
-    try:
-        if decoded_response['error']:
-            error_code = decoded_response['error']['error_code']
-            error_msg = decoded_response['error']['error_msg']
-            raise APIError(f'Error {error_code} - {error_msg}')
-    except KeyError:
-        pass
-
-
-def get_number_of_references_by_interval(vk_data, query, start_timestamp, end_timestamp):
-    url = 'https://api.vk.com/method/newsfeed.search'
-
-    token, api_version = vk_data
-
-    payload = {
-        'q': query,
-        'access_token': token,
-        'v': api_version,
-        'start_time': start_timestamp,
-        'end_time': end_timestamp
-    }
-
-    response = requests.get(url, params=payload)
-    response.raise_for_status()
-
-    decoded_response = response.json()
-    check_error_in_response(decoded_response)
-
-    number_of_references = decoded_response['response']['total_count']
-
-    return number_of_references
-
-
-def get_stats_by_period(vk_data, query, period):
-    result = []
-    for interval in period:
-        day_date, end_timestamp, start_timestamp = interval
-        day_result = get_number_of_references_by_interval(vk_data, query, start_timestamp, end_timestamp)
-        result.append((day_date, day_result))
-    return result
-
-
-def get_chart(stats_by_period):
-    dates = []
-    counts = []
-    for item in stats_by_period:
-        dates.append(item[0])
-        counts.append(item[1])
-
-    fig = go.Figure([go.Bar(x=dates, y=counts)])
-    fig.show()
+from args_parser import parse_args
+from time_tools import get_interval_dates, get_timestamps
+from stats import get_stats_for_queries
+from plot_tools import get_group_chart
 
 
 if __name__ == '__main__':
 
     dotenv.load_dotenv()
 
-    from args_parser import parse_args
-    args = parse_args()
-    print(args.queries)
-    print(args)
-    print(args.i)
-    print(args.n)
-
     vk_access_token = os.getenv('VK_ACCESS_TOKEN')
     vk_api_version = os.getenv('VK_API_VERSION')
 
     vk_data = [vk_access_token, vk_api_version]
 
-    query = 'Coca-cola'
-    number_of_intervals = args.n
-    interval_type = args.i
+    args = parse_args()
 
-    timestamps = get_timestamps(number_of_intervals, interval_type)
-    print(timestamps)
-    stats_by_period = get_stats_by_period(vk_data, query, timestamps)
-    print(stats_by_period)
-    get_chart(stats_by_period)
+    queries = args.queries
+    number = args.number
+    interval_type = args.interval
 
+    dates = get_interval_dates(number, interval_type)
+    period = get_timestamps(number, interval_type)
+    queries_stats = get_stats_for_queries(vk_data, queries, period)
+
+    get_group_chart(dates, queries_stats)

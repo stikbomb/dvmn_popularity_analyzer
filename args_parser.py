@@ -9,6 +9,7 @@ def parse_args():
                         nargs='+',
                         help='queries')
     parser.add_argument(
+        '-interval',
         '-i',
         type=str,
         help='Type of intervals. Default - "day"',
@@ -17,6 +18,7 @@ def parse_args():
     )
 
     parser.add_argument(
+        '-number',
         '-n',
         type=int,
         help='Number of intervals to search. Default - "7"',
